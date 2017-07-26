@@ -2,7 +2,7 @@
 
 {
     'name' : 'Paquete',
-    'author': 'Gabriel Lopez',
+    'author': 'Gabriel Lopez Alarcon',
     'version' : '1',
     'summary': 'Paquetes y Productos',
     'sequence': 30,
@@ -12,7 +12,7 @@
 
     """,
     'category': 'Productos',
-    'website': 'www.argil.mx',
+    'website': 'https://www.facebook.com/gabo.Lop.Al',
     'images' : [],
     'depends' : ['sale','account',],
     'data': [
