@@ -9,16 +9,98 @@ class sale_order_line(models.Model):
 
     @api.model
     def create(self, values):
+        red_subprice = 0.0
         res = super(sale_order_line,self).create(values)
-        if res.product_id.pack == True:
-            if res.product_id.tip == False:
-                for xpak in res.product_id.pro_ids:
-                    values.update({'product_id':xpak.pack_pro_id.id,'name':str(res.product_id.name)+" - "+str(xpak.pack_pro_id.name),'price_unit':0,'product_uom_qty':xpak.subtotal_price*res.product_uom_qty})
-                    self.create(values)
-            if res.product_id.tip == True:
-                for xpak in res.product_id.pro_ids:
-                    values.update({'product_id':xpak.pack_pro_id.id,'name':str(res.product_id.name)+" - "+str(xpak.pack_pro_id.name),'price_unit':xpak.pack_pro_id.list_price,'product_uom_qty':xpak.subtotal_price*res.product_uom_qty})
-                    self.create(values)
+        for xpak in res.product_id.pro_ids:
+            for xprc in res.order_id.pricelist_id.item_ids:
+                if xprc.applied_on == '3_global':
+                    if xprc.compute_price == 'fixed':
+                        red_subprice = xprc.fixed_price
+                    if xprc.compute_price == 'percentage':
+                        red_subprice = xpak.pack_pro_id.list_price-(xpak.pack_pro_id.list_price*xprc.percent_price/100)
+                    if xprc.compute_price == 'formula':
+                        if xprc.base == 'list_price':
+                            red_subprice = xpak.pack_pro_id.list_price-(xpak.pack_pro_id.list_price*xprc.price_discount/100)+xprc.price_surcharge+xprc.price_round+xprc.price_min_margin
+                        if xprc.base == 'standard_price':
+                            red_subprice = xpak.pack_pro_id.list_price-(xpak.pack_pro_id.standard_price*xprc.price_discount/100)+xprc.price_surcharge+xprc.price_round+xprc.price_min_margin
+                if xprc.applied_on == '2_product_category':
+                    if xpak.pack_pro_id.categ_id == xprc.categ_id:
+                        if xprc.compute_price == 'fixed':
+                            red_subprice = xprc.fixed_price
+                        if xprc.compute_price == 'percentage':
+                            red_subprice = xpak.pack_pro_id.list_price-(xpak.pack_pro_id.list_price*xprc.percent_price/100)
+                        if xprc.compute_price == 'formula':
+                            if xprc.base == 'list_price':
+                                red_subprice = xpak.pack_pro_id.list_price-(xpak.pack_pro_id.list_price*xprc.price_discount/100)+xprc.price_surcharge+xprc.price_round+xprc.price_min_margin
+                            if xprc.base == 'standard_price':
+                                red_subprice = xpak.pack_pro_id.list_price-(xpak.pack_pro_id.standard_price*xprc.price_discount/100)+xprc.price_surcharge+xprc.price_round+xprc.price_min_margin
+                if xprc.applied_on == '1_product':
+                    if xpak.pack_pro_id.id == xprc.product_tmpl_id.id:
+                        if xprc.compute_price == 'fixed':
+                            red_subprice = xprc.fixed_price
+                        if xprc.compute_price == 'percentage':
+                            red_subprice = xpak.pack_pro_id.list_price-(xpak.pack_pro_id.list_price*xprc.percent_price/100)
+                        if xprc.compute_price == 'formula':
+                            if xprc.base == 'list_price':
+                                red_subprice = xpak.pack_pro_id.list_price-(xpak.pack_pro_id.list_price*xprc.price_discount/100)+xprc.price_surcharge+xprc.price_round+xprc.price_min_margin
+                            if xprc.base == 'standard_price':
+                                red_subprice = xpak.pack_pro_id.list_price-(xpak.pack_pro_id.standard_price*xprc.price_discount/100)+xprc.price_surcharge+xprc.price_round+xprc.price_min_margin
+                if xprc.applied_on == '0_product_variant':
+                    if xpak.pack_pro_id.description_sale == xprc.product_id.description_sale:
+                        if xprc.compute_price == 'fixed':
+                            red_subprice = xprc.fixed_price
+                        if xprc.compute_price == 'percentage':
+                            red_subprice = xpak.pack_pro_id.list_price-(xpak.pack_pro_id.list_price*xprc.percent_price/100)
+                        if xprc.compute_price == 'formula':
+                            if xprc.base == 'list_price':
+                                red_subprice = xpak.pack_pro_id.list_price-(xpak.pack_pro_id.list_price*xprc.price_discount/100)+xprc.price_surcharge+xprc.price_round+xprc.price_min_margin
+                            if xprc.base == 'standard_price':
+                                red_subprice = xpak.pack_pro_id.list_price-(xpak.pack_pro_id.standard_price*xprc.price_discount/100)+xprc.price_surcharge+xprc.price_round+xprc.price_min_margin
+            if res.product_id.pack == True:
+                if res.product_id.tip == False:
+                        values.update({
+                                        'product_id':xpak.pack_pro_id.id,
+                                        'name':str(res.product_id.name)+" - "+str(xpak.pack_pro_id.name),
+                                        'price_unit':0,
+                                        'product_uom_qty':xpak.subtotal_price*res.product_uom_qty,
+                                        })
+                        self.create(values)
+                if res.product_id.tip == True:
+                    print "####### SELF RED SUPRICE >>>>>>> ", red_subprice
+                    res.price_unit = 0.00
+                    if res.order_id.pricelist_id.country_group_ids:
+                        if res.order_id.pricelist_id.country_group_ids == res.order_id.partner_id.country_id:
+                            values.update({
+                                            'product_id':xpak.pack_pro_id.id,
+                                            'name':str(res.product_id.name)+" - "+str(xpak.pack_pro_id.name),
+                                            'price_unit':red_subprice,
+                                            'product_uom_qty':xpak.subtotal_price*res.product_uom_qty,
+                                            })
+                            self.create(values)
+                        else:
+                            values.update({
+                                            'product_id':xpak.pack_pro_id.id,
+                                            'name':str(res.product_id.name)+" - "+str(xpak.pack_pro_id.name),
+                                            'price_unit':xpak.pack_pro_id.list_price,
+                                            'product_uom_qty':xpak.subtotal_price*res.product_uom_qty,
+                                            })
+                            self.create(values)
+                    elif red_subprice == 0.0:
+                        values.update({
+                                        'product_id':xpak.pack_pro_id.id,
+                                        'name':str(res.product_id.name)+" - "+str(xpak.pack_pro_id.name),
+                                        'price_unit':xpak.pack_pro_id.list_price,
+                                        'product_uom_qty':xpak.subtotal_price*res.product_uom_qty,
+                                        })
+                        self.create(values)
+                    else:
+                        values.update({
+                                        'product_id':xpak.pack_pro_id.id,
+                                        'name':str(res.product_id.name)+" - "+str(xpak.pack_pro_id.name),
+                                        'price_unit':red_subprice,
+                                        'product_uom_qty':xpak.subtotal_price*res.product_uom_qty,
+                                        })
+                        self.create(values)
         return res
 
 class pack_product(models.Model):

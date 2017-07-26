@@ -26,9 +26,9 @@
                             <field name="uni_med" required="1" />
                         </tree>
                     </field>
-                <group class="oe_subtotal_footer oe_rigth" colspan="2" name="grupo_product">
-                    <field name="pre_sale" />
-                </group>
+                    <group class="oe_subtotal_footer oe_rigth" colspan="2" name="grupo_product">
+                        <field name="pre_sale" />
+                    </group>
                 </page>
             </notebook>
         </field>
