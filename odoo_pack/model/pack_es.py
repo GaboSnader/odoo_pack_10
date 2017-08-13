@@ -107,11 +107,11 @@ class sale_order_line(models.Model):
 
 class pack_product(models.Model):
     _name = 'pack.product'
-    _description = 'Product Bundle'
-    pro_id = fields.Many2one('product.template', 'Reference')
-    uni_med = fields.Many2one('product.uom', 'Unit of measure')
-    qty = fields.Float('Quantity', digits=(3,0), default=1)
-    pack_pro_id = fields.Many2one('product.template', 'Product')
+    _description = 'Productos de Paquete'
+    pro_id = fields.Many2one('product.template', 'Referencia')
+    uni_med = fields.Many2one('product.uom', 'Unidad de medida')
+    qty = fields.Float('Cantidad', digits=(3,0), default=1)
+    pack_pro_id = fields.Many2one('product.template', 'Producto')
     subtotal_price = fields.Float('Qty', digits=(14,3), compute="calcula_total")
     subtotal = fields.Float('Subtotal', digits=(14,3), readonly=True)
 
@@ -136,7 +136,7 @@ class pack_product(models.Model):
     @api.one
     def _check_qty(self):
         if self.qty == 0:
-            raise ValidationError(_('Error on product quantity:\n %s \nquantity can\'t have "0" value.\nYou can delete this product from the bundle, if you want.'%self.pack_pro_id.name))
+            raise ValidationError(_('Error en la Cantidad del Producto:\n %s \nLa Cantidad del Producto No Debe Tener Valor "0".\nSi Desea Puede Eliminar el Producto del Paquete'%self.pack_pro_id.name))
 
     @api.onchange('pack_pro_id')
     def onchange_uni_med(self):
@@ -147,16 +147,16 @@ class pack_product(models.Model):
     @api.one
     def _check_pack_pro(self):
         if self.pack_pro_id.pack == True:
-            raise ValidationError(_('ERROR: The bundle must not contain other bundles'))
+            raise ValidationError(_('ERROR: El Paquete No Debe Contener Productos Declarados Como Paquetes'))
 
 class product_template(models.Model):
     _name = 'product.template'
     _inherit = 'product.template'
-    pack = fields.Boolean('Bundle')
-    tip = fields.Boolean('Price based on components')
+    pack = fields.Boolean('Paquete')
+    tip = fields.Boolean('Precio Basado en Componetes')
     mod_pro = fields.Boolean('Mod', default=True)
 
-    pro_ids = fields.One2many('pack.product', 'pro_id', 'Products')
+    pro_ids = fields.One2many('pack.product', 'pro_id', 'Productos')
 
     @api.depends('pro_ids')
     @api.one
@@ -169,7 +169,7 @@ class product_template(models.Model):
                 self.pre_sale = acum
                 self.list_price = 0.0
 
-    pre_sale = fields.Float('Bundle price', digits=(14,2), compute="calcula_product")
+    pre_sale = fields.Float('Precio del Paquete', digits=(14,2), compute="calcula_product")
 
     @api.onchange('pack')
     def onchange_pack(self):
@@ -193,7 +193,7 @@ class product_template(models.Model):
         if self.pack == True:
             if self.tip == True:
                 if self.list_price != 0:
-                    raise ValidationError(_('Do not set price if price is based on components price'))
+                    raise ValidationError(_('El Paquete No Debe Tener Valor Si Esta Basado En Precio De Sus Componentes'))
 
     @api.constrains('pro_ids')
     @api.one
@@ -203,7 +203,7 @@ class product_template(models.Model):
             print "##### UNIDAD >>>>>> ", item.uni_med.name
             print "##### CATEGORIA >>>>>> ", item.uni_med.category_id.name
             if self.uom_id.category_id.name != item.uni_med.category_id.name:
-                raise ValidationError(_('The product unit of measure category\n %s \nmust share the same category as the unit of measure of the bundle'% item.pack_pro_id.name))
+                raise ValidationError(_('La Categoria de la Unidad De Medida del Producto:\n %s \nDebe ser igual a la Categoria de la Unidad del Paquete'% item.pack_pro_id.name))
 
     @api.constrains('pro_ids')
     @api.one
@@ -213,7 +213,7 @@ class product_template(models.Model):
             for pval in self.pro_ids:
                 acum+= pval.pack_pro_id.list_price
             if acum == 0.0:
-                raise ValidationError(_('The bundle should contain a product'))
+                raise ValidationError(_('El Paquete Debe Contener Algun Producto'))
 
     _order = 'name'
     _defaults = {
