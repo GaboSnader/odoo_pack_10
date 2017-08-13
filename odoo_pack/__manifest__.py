@@ -3,7 +3,7 @@
 # License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
 {
     "name" : "Paquete",
-    "summary": "Product Combo Bundle Pack",
+    "summary": "Product bundle, product combo , product set, product pack, grouped products, ...",
     "version" : "10.0.1.1.0",
     "description": """
 		This module allows you to combine individual products into another 
